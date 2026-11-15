@@ -17,15 +17,19 @@ mkdir -p "$OUTPUT_DIR/arm64"
 mkdir -p "$OUTPUT_DIR/x86_64"
 mkdir -p "$RELEASE_DIR"
 
+# The binary output path (same directory for every --arch with the SwiftPM build layout,
+# so the binary must be copied out right after each per-arch build)
+BIN_PATH=$(swift build --configuration release --arch arm64 --show-bin-path)
+
 # Build for ARM64 architecture (Apple Silicon)
 echo "Building for ARM64 architecture (Apple Silicon)..."
-swift build --configuration release --arch arm64 -Xswiftc "-target" -Xswiftc "arm64-apple-macosx10.15"
-cp -f ".build/arm64-apple-macosx/release/$PROJECT_NAME" "$OUTPUT_DIR/arm64/"
+swift build --configuration release --arch arm64
+cp -f "$BIN_PATH/$PROJECT_NAME" "$OUTPUT_DIR/arm64/"
 
 # Build for x86_64 architecture (Intel)
 echo "Building for x86_64 architecture (Intel)..."
-swift build --configuration release --arch x86_64 -Xswiftc "-target" -Xswiftc "x86_64-apple-macosx10.15"
-cp -f ".build/x86_64-apple-macosx/release/$PROJECT_NAME" "$OUTPUT_DIR/x86_64/"
+swift build --configuration release --arch x86_64
+cp -f "$BIN_PATH/$PROJECT_NAME" "$OUTPUT_DIR/x86_64/"
 
 # Create universal binary
 echo "Creating universal binary..."

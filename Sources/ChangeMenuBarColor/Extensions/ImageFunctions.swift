@@ -110,25 +110,3 @@ func colorName(_ color: NSColor) -> String {
         return color.description
     }
 }
-
-func getOriginalWallpaper(for screen: NSScreen) -> NSImage? {
-    let workspace = NSWorkspace.shared
-    if let url = workspace.desktopImageURL(for: screen) {
-        do {
-            let imageData = try Data(contentsOf: url)
-            if let image = NSImage(data: imageData) {
-                Log.debug("Successfully loaded original wallpaper from \(url.path)")
-                return image
-            } else {
-                Log.error("Failed to convert data to NSImage")
-                return nil
-            }
-        } catch {
-            Log.error("Failed to load original wallpaper: \(error)")
-            return nil
-        }
-    } else {
-        Log.error("Could not get desktop image URL")
-        return nil
-    }
-}
