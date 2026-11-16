@@ -2,8 +2,6 @@
 
 A macOS menu bar app that makes the menu bar black, plus a CLI that composites any solid color or gradient strip onto the wallpaper. The menu bar samples the wallpaper, so the tool writes a colored strip at the top of a copy of your wallpaper and sets it as the desktop picture.
 
-![Custom color menu bar](Screenshots/Adjusted.png)
-
 ## Menu bar app
 
 ```bash
@@ -44,10 +42,6 @@ macOS 10.15 or later. The login item needs macOS 13 or later.
 
 - **Igor Kulman** - initial work - igor@kulman.sk
 - Fork maintained by looluo
-
-## Support the project
-
-<a href="https://www.buymeacoffee.com/igorkulman" target="_blank"><img src="https://www.buymeacoffee.com/assets/img/custom_images/orange_img.png" alt="Buy Me A Coffee" style="height: 41px !important;width: 174px !important;box-shadow: 0px 3px 2px 0px rgba(190, 190, 190, 0.5) !important;-webkit-box-shadow: 0px 3px 2px 0px rgba(190, 190, 190, 0.5) !important;" ></a>
 
 ## License
 
