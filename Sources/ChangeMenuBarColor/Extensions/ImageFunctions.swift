@@ -45,58 +45,42 @@ func createSolidImage(color: NSColor, width: CGFloat, height: CGFloat) -> NSImag
 }
 
 func combineImages(baseImage: NSImage, addedImage: NSImage) -> NSImage? {
-    // Create a high-quality representation context
     let width = baseImage.size.width
     let height = baseImage.size.height
-    
-    // Create bitmap representation with higher quality options
-    let rep = NSBitmapImageRep(
-        bitmapDataPlanes: nil,
-        pixelsWide: Int(width),
-        pixelsHigh: Int(height),
-        bitsPerSample: 8,
-        samplesPerPixel: 4,
-        hasAlpha: true,
-        isPlanar: false,
-        colorSpaceName: .calibratedRGB,
-        bytesPerRow: 0,
-        bitsPerPixel: 0
-    )
-    
-    rep?.size = NSSize(width: width, height: height)
-    
-    // Create drawing context
-    NSGraphicsContext.saveGraphicsState()
-    guard let rep = rep, let context = NSGraphicsContext(bitmapImageRep: rep) else {
-        Log.error("Could not create graphics context when merging images")
-        NSGraphicsContext.restoreGraphicsState()
+
+    // Compose in sRGB end to end with CoreGraphics. An NSBitmapImageRep in
+    // calibratedRGB shifts colors on the JPEG roundtrip: dark colors come out
+    // up to ~20% darker than the requested HEX.
+    guard let sRGB = CGColorSpace(name: CGColorSpace.sRGB) else {
+        Log.error("Could not create sRGB color space")
         return nil
     }
-    NSGraphicsContext.current = context
-    
-    // Draw the base image (wallpaper) at full quality
-    baseImage.draw(in: NSRect(x: 0, y: 0, width: width, height: height),
-                  from: NSRect(x: 0, y: 0, width: baseImage.size.width, height: baseImage.size.height),
-                  operation: .copy,
-                  fraction: 1.0)
-    
+    guard let context = CGContext(data: nil, width: Int(width), height: Int(height), bitsPerComponent: 8, bytesPerRow: 0, space: sRGB, bitmapInfo: CGImageAlphaInfo.premultipliedLast.rawValue) else {
+        Log.error("Could not create graphics context when merging images")
+        return nil
+    }
+
+    guard let base = baseImage.cgImage(forProposedRect: nil, context: nil, hints: nil) else {
+        Log.error("Could not get CGImage of the base wallpaper")
+        return nil
+    }
+    context.draw(base, in: CGRect(x: 0, y: 0, width: width, height: height))
+
     // The added image is created with the correct menu bar height for the screen, use it in full
     // (do not clamp to 24pt: notched displays have a taller menu bar)
     let menuBarHeight = addedImage.size.height
-    
-    // Draw the menu bar portion with high quality
-    addedImage.draw(in: NSRect(x: 0, y: height - menuBarHeight, width: width, height: menuBarHeight),
-                   from: NSRect(x: 0, y: 0, width: addedImage.size.width, height: menuBarHeight),
-                   operation: .sourceOver,
-                   fraction: 1.0)
-    
-    NSGraphicsContext.restoreGraphicsState()
-    
-    // Create final image from the bitmap representation
-    let finalImage = NSImage(size: NSSize(width: width, height: height))
-    finalImage.addRepresentation(rep)
-    
-    return finalImage
+    guard let strip = addedImage.cgImage(forProposedRect: nil, context: nil, hints: nil) else {
+        Log.error("Could not get CGImage of the menu bar strip")
+        return nil
+    }
+    context.draw(strip, in: CGRect(x: 0, y: height - menuBarHeight, width: width, height: menuBarHeight))
+
+    guard let composed = context.makeImage() else {
+        Log.error("Could not create composed image")
+        return nil
+    }
+
+    return NSImage(cgImage: composed, size: CGSize(width: width, height: height))
 }
 
 func createContext(width: CGFloat, height: CGFloat) -> CGContext? {
