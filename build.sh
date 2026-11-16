@@ -39,12 +39,56 @@ lipo -create -output "$RELEASE_DIR/$PROJECT_NAME" "$OUTPUT_DIR/arm64/$PROJECT_NA
 echo "Verifying architectures in the universal binary:"
 lipo -info "$RELEASE_DIR/$PROJECT_NAME"
 
+# Assemble the menu bar app bundle around the same universal binary
+echo "Assembling $PROJECT_NAME.app..."
+APP="$OUTPUT_DIR/$PROJECT_NAME.app"
+rm -rf "$APP"
+mkdir -p "$APP/Contents/MacOS"
+cp "$RELEASE_DIR/$PROJECT_NAME" "$APP/Contents/MacOS/$PROJECT_NAME"
+
+cat > "$APP/Contents/Info.plist" <<EOF
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+    <key>CFBundleDevelopmentRegion</key>
+    <string>en</string>
+    <key>CFBundleExecutable</key>
+    <string>$PROJECT_NAME</string>
+    <key>CFBundleIdentifier</key>
+    <string>com.igorkulman.ChangeMenuBarColor.app</string>
+    <key>CFBundleInfoDictionaryVersion</key>
+    <string>6.0</string>
+    <key>CFBundleName</key>
+    <string>$PROJECT_NAME</string>
+    <key>CFBundlePackageType</key>
+    <string>APPL</string>
+    <key>CFBundleShortVersionString</key>
+    <string>$VERSION</string>
+    <key>CFBundleVersion</key>
+    <string>$VERSION</string>
+    <key>LSMinimumSystemVersion</key>
+    <string>10.15</string>
+    <key>LSUIElement</key>
+    <true/>
+    <key>NSHighResolutionCapable</key>
+    <true/>
+</dict>
+</plist>
+EOF
+
+# SMAppService requires a code signed bundle; the signature must cover Info.plist
+codesign --force --sign - "$APP"
+
 # Create a zip file for distribution
 echo "Creating zip archive for distribution..."
-cd "$RELEASE_DIR" || exit
-zip -r "../$PROJECT_NAME-$VERSION.zip" "$PROJECT_NAME"
+cp -f "$RELEASE_DIR/$PROJECT_NAME" "$OUTPUT_DIR/$PROJECT_NAME"
+cd "$OUTPUT_DIR" || exit
+rm -f "$PROJECT_NAME-$VERSION.zip"
+zip -r "$PROJECT_NAME-$VERSION.zip" "$PROJECT_NAME.app" "$PROJECT_NAME" > /dev/null
 cd - || exit
 
 echo "✅ Build complete!"
 echo "Universal binary is available at: $RELEASE_DIR/$PROJECT_NAME"
+echo "Menu bar app is available at: $APP"
 echo "Zip archive is available at: $OUTPUT_DIR/$PROJECT_NAME-$VERSION.zip"
