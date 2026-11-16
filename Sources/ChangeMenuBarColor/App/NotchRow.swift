@@ -1,8 +1,3 @@
-//
-//  NotchRow.swift
-//  ChangeMenuBarColor
-//
-
 import Cocoa
 
 /// One menu row: an NSSwitch and a "Notch" label, as an NSMenuItem.view.

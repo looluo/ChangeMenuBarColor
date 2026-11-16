@@ -1,15 +1,7 @@
-//
-//  LoginItem.swift
-//  ChangeMenuBarColor
-//
-
 import Cocoa
 import ServiceManagement
 
 enum LoginItem {
-    /// Registers the .app bundle as a login item on the first run only, then
-    /// reads the status truthfully. Never fights the user afterwards: a
-    /// revocation in System Settings is never re-registered.
     static func registerOnFirstRun(_ preferences: inout Preferences) {
         // SMAppService happily registers an unbundled binary by executable path,
         // which would put a dev build into the user's login items. Only a real
@@ -34,7 +26,6 @@ enum LoginItem {
         do {
             try service.register()
         } catch {
-            // A repeat registration is as good as a registration.
             if (error as NSError).code != kSMErrorAlreadyRegistered {
                 Log.error("Login item registration failed: \(error.localizedDescription). Enable it manually in System Settings → General → Login Items")
                 Log.debug("Login item status: \(statusDescription(service.status))")

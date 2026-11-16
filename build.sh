@@ -39,7 +39,6 @@ lipo -create -output "$RELEASE_DIR/$PROJECT_NAME" "$OUTPUT_DIR/arm64/$PROJECT_NA
 echo "Verifying architectures in the universal binary:"
 lipo -info "$RELEASE_DIR/$PROJECT_NAME"
 
-# Assemble the menu bar app bundle around the same universal binary
 echo "Assembling $PROJECT_NAME.app..."
 APP="$OUTPUT_DIR/$PROJECT_NAME.app"
 rm -rf "$APP"

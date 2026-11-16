@@ -1,16 +1,7 @@
-//
-//  WallpaperPipeline.swift
-//  ChangeMenuBarColor
-//
-
 import Cocoa
 import Files
 import Foundation
 
-/// The single owner of wallpaper knowledge: the working directory, marker files,
-/// generated-file naming and cleanup, base resolution, strip composition, and
-/// setting the desktop picture. The CLI and the GUI both call this and nothing
-/// else writes the desktop.
 struct WallpaperPipeline {
     enum StripSpec {
         case solid(color: NSColor)
@@ -28,8 +19,6 @@ struct WallpaperPipeline {
         case external
     }
 
-    /// Filename prefix of generated files, so observers can tell a GUI write
-    /// from a CLI write in the same working directory.
     enum OutputKind {
         case cli
         case gui
@@ -50,7 +39,6 @@ struct WallpaperPipeline {
         let output: URL
     }
 
-    /// Full CLI path: generate, write, set the desktop picture, clean up.
     @discardableResult
     func apply(spec: StripSpec, base: BaseSource, screen: NSScreen, outputKind: OutputKind = .cli) -> Applied? {
         guard let applied = prepare(spec: spec, base: base, screen: screen, outputKind: outputKind) else {
@@ -102,7 +90,6 @@ struct WallpaperPipeline {
         }
     }
 
-    /// Set a prepared wallpaper as the desktop picture and clean up older files.
     func install(_ applied: Applied, screen: NSScreen) -> Bool {
         guard let workingDirectory = workingDirectory else {
             Log.error("Cannot access Application Support folder")
@@ -120,7 +107,6 @@ struct WallpaperPipeline {
         }
     }
 
-    /// Set the remembered original wallpaper back for this screen.
     @discardableResult
     func restoreOriginal(screen: NSScreen) -> URL? {
         guard let original = rememberedOriginal(for: screen) else {
@@ -140,8 +126,6 @@ struct WallpaperPipeline {
         try? FileManager.default.removeItem(at: url)
     }
 
-    /// Classify an observed desktop image URL by the same working-directory rule
-    /// the base resolution uses, split by which front end wrote the file.
     func classify(url: URL) -> WallpaperClass {
         guard let workingDirectory = workingDirectory else {
             return .external
@@ -239,8 +223,6 @@ struct WallpaperPipeline {
     }
 
     private func deleteOldWallpaperFiles(keeping current: URL, in folder: Folder) {
-        // A multi-display run sets one generated jpg per screen, so a file that is
-        // another screen's current desktop picture must never be deleted here.
         let inUse = Set(NSScreen.screens.compactMap { NSWorkspace.shared.desktopImageURL(for: $0)?.standardizedFileURL.path } + [current.standardizedFileURL.path])
         let oldWallpaperFiles = folder.files.filter { $0.extension == "jpg" && !inUse.contains($0.url.standardizedFileURL.path) }
         guard !oldWallpaperFiles.isEmpty else {

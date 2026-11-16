@@ -1,8 +1,3 @@
-//
-//  NotchController.swift
-//  ChangeMenuBarColor
-//
-
 import Cocoa
 import Foundation
 
@@ -13,18 +8,12 @@ enum NotchIntent: String, Codable {
     case off
 }
 
-/// What we believe is on each display right now.
 enum WallpaperState: Equatable {
     case unknown
     case original(WallpaperRef)
     case applied(original: WallpaperRef, output: WallpaperRef)
 }
 
-/// Owns the notch intent and the per-display wallpaper state. Every event
-/// (toggle, observation, display change, launch) funnels into `reconcile`, and
-/// every desktop write in the app flows through `commit`, which records the
-/// expected URL so the monitor can tell our own write landing from an external
-/// change.
 @MainActor
 final class NotchController {
     private let pipeline = WallpaperPipeline()
@@ -42,7 +31,6 @@ final class NotchController {
         self.intent = preferences.notchIntent
     }
 
-    /// Menu action. Persists, then reconciles every display.
     func toggle(to newIntent: NotchIntent) {
         guard newIntent != intent else {
             return
@@ -61,8 +49,6 @@ final class NotchController {
         reconcileAll(forced: true)
     }
 
-    /// Monitor callback. A pending own write that landed is adopted silently;
-    /// anything else reconciles.
     func observed(_ ref: WallpaperRef, on id: DisplayID) {
         let expected = pendingOwnWrite[id]
         pendingOwnWrite[id] = nil
@@ -78,8 +64,6 @@ final class NotchController {
         NSScreen.screens.compactMap { $0.displayID }.forEach { reconcile($0, forced: forced) }
     }
 
-    // The converge function. Running it twice with nothing external changing
-    // produces no second write.
     private func reconcile(_ id: DisplayID, forced: Bool = false) {
         guard let screen = Self.screen(withID: id) else {
             displays.removeValue(forKey: id)
@@ -98,15 +82,10 @@ final class NotchController {
         case .on:
             switch pipeline.classify(url: url) {
             case .ours where !forced:
-                // Our strip is on screen. Adopting without a write is what makes
-                // relaunching after Exit converge without stacking strips.
                 if let original = adoptionOriginal(for: id, screen: screen) {
                     displays[id] = .applied(original: original, output: ref)
                 }
             case .ours, .generatedOther, .external:
-                // A CLI-generated file means another color was applied while
-                // intent is on, and intent on means black; an external file is a
-                // new base. Both re-apply from the remembered original.
                 commit(.apply(spec: Self.blackSpec), on: id)
             }
         case .off:
@@ -116,8 +95,6 @@ final class NotchController {
                 case .ours where observedPath == output.url.standardizedFileURL.path:
                     commit(.restoreOriginal, on: id)
                 case .ours, .generatedOther:
-                    // The CLI or another session applied while we are off.
-                    // Respect it; never adopt a generated file as an original.
                     displays[id] = .applied(original: original, output: ref)
                 case .external:
                     displays[id] = .original(ref)
@@ -125,8 +102,6 @@ final class NotchController {
             case .original, .unknown:
                 switch pipeline.classify(url: url) {
                 case .ours, .generatedOther:
-                    // Intent off means the original wallpaper, including when a
-                    // leftover strip from an earlier session is still set.
                     commit(.restoreOriginal, on: id)
                 case .external:
                     displays[id] = .original(ref)
@@ -135,7 +110,6 @@ final class NotchController {
         }
     }
 
-    // The only place the app writes the desktop picture.
     private func commit(_ write: DisplayWrite, on id: DisplayID) {
         guard let screen = Self.screen(withID: id), !inFlight.contains(id) else {
             return

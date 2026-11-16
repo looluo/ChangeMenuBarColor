@@ -1,18 +1,9 @@
-//
-//  Preferences.swift
-//  ChangeMenuBarColor
-//
-
 import Foundation
 
-/// Persisted next to the wallpaper markers in
-/// ~/Library/Application Support/ChangeMenuBarColor/preferences.plist, so the
-/// bundled app and the bare dev binary resolve the same intent.
 struct Preferences: Codable {
     var notchOn: Bool?
     var firstRunCompleted: Bool?
 
-    /// Absent reads as ON: the toggle defaults to on at first launch.
     var notchIntent: NotchIntent {
         return (notchOn ?? true) ? .on : .off
     }

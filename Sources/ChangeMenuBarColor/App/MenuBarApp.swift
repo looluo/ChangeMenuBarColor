@@ -1,8 +1,3 @@
-//
-//  MenuBarApp.swift
-//  ChangeMenuBarColor
-//
-
 import Cocoa
 
 enum MenuBarApp {
@@ -43,12 +38,6 @@ final class MenuBarAppDelegate: NSObject, NSApplicationDelegate {
         // desktopImageURL read.
         controller.reconcileAll()
         monitor.start()
-    }
-
-    // Exit leaves the currently set wallpaper untouched; convergence on the next
-    // launch comes from the reconcile table, not from teardown writes.
-    func applicationShouldTerminate(_ sender: NSApplication) -> NSApplication.TerminateReply {
-        return .terminateNow
     }
 
     func applicationWillTerminate(_ notification: Notification) {

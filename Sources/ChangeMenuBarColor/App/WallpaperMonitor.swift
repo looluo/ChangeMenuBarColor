@@ -1,8 +1,3 @@
-//
-//  WallpaperMonitor.swift
-//  ChangeMenuBarColor
-//
-
 import Cocoa
 import Foundation
 
