@@ -21,7 +21,7 @@ final class NotchRow: NSView {
         notchSwitch.target = self
         notchSwitch.action = #selector(switchFlipped(_:))
         let switchSize = notchSwitch.intrinsicContentSize
-        notchSwitch.frame.origin = CGPoint(x: bounds.width - switchSize.width - 14, y: (bounds.height - switchSize.height) / 2)
+        notchSwitch.frame = NSRect(x: bounds.width - switchSize.width - 14, y: (bounds.height - switchSize.height) / 2, width: switchSize.width, height: switchSize.height)
         addSubview(notchSwitch)
     }
 
