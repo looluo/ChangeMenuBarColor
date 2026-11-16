@@ -58,6 +58,8 @@ cat > "$APP/Contents/Info.plist" <<EOF
     <string>com.igorkulman.ChangeMenuBarColor.app</string>
     <key>CFBundleInfoDictionaryVersion</key>
     <string>6.0</string>
+    <key>CFBundleIconFile</key>
+    <string>AppIcon</string>
     <key>CFBundleName</key>
     <string>$PROJECT_NAME</string>
     <key>CFBundlePackageType</key>
@@ -75,6 +77,19 @@ cat > "$APP/Contents/Info.plist" <<EOF
 </dict>
 </plist>
 EOF
+
+# App icon: regenerate the icns from the committed source png
+mkdir -p "$APP/Contents/Resources"
+ICONSET="$OUTPUT_DIR/AppIcon.iconset"
+rm -rf "$ICONSET"
+mkdir -p "$ICONSET"
+for size in 16 32 128 256 512; do
+    sips -z $size $size Assets/AppIcon.png --out "$ICONSET/icon_${size}x${size}.png" > /dev/null
+    double=$((size * 2))
+    sips -z $double $double Assets/AppIcon.png --out "$ICONSET/icon_${size}x${size}@2x.png" > /dev/null
+done
+iconutil -c icns "$ICONSET" -o "$APP/Contents/Resources/AppIcon.icns"
+cp -f Assets/AppIcon.png "$APP/Contents/Resources/AppIcon.png"
 
 # SMAppService requires a code signed bundle; the signature must cover Info.plist
 codesign --force --sign - "$APP"

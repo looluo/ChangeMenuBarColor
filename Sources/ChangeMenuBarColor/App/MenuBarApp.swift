@@ -69,6 +69,11 @@ final class MenuBarAppDelegate: NSObject, NSApplicationDelegate {
     }
 
     private func statusIcon() -> NSImage {
+        if let url = Bundle.main.url(forResource: "AppIcon", withExtension: "png"), let icon = NSImage(contentsOf: url) {
+            icon.size = NSSize(width: 16, height: 16)
+            NSApp.applicationIconImage = icon
+            return icon
+        }
         if #available(macOS 11, *), let symbol = NSImage(systemSymbolName: "menubar.arrow.up.rectangle", accessibilityDescription: "Notch") {
             return symbol
         }
