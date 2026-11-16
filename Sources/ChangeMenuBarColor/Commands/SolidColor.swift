@@ -6,8 +6,8 @@
 //
 
 import ArgumentParser
-import Foundation
 import Cocoa
+import Foundation
 
 final class SolidColor: Command, ParsableCommand {
     static let configuration = CommandConfiguration(
@@ -28,27 +28,15 @@ final class SolidColor: Command, ParsableCommand {
         return allDisplays
     }
 
-    override func createWallpaper(screen: NSScreen) -> NSImage? {
-        guard let wallpaper = loadWallpaperImage(wallpaper: wallpaper, screen: screen) else {
-            return nil
-        }
+    override var base: WallpaperPipeline.BaseSource {
+        return wallpaper.map { .file(path: $0) } ?? .currentDesktop
+    }
 
+    override func spec() -> WallpaperPipeline.StripSpec? {
         guard let color: NSColor = NSColor(hexString: self.color) else {
             Log.error("Invalid HEX color provided. Make sure it includes the '#' symbol, e.g: #FF0000")
             return nil
         }
-
-        guard let resizedWallpaper = wallpaper.crop(size: screen.size) else {
-            Log.error("Cannot not resize provided wallpaper to screen size")
-            return nil
-        }
-
-        Log.debug("Generating \(colorName(color)) solid color image")
-        guard let topImage = createSolidImage(color: color, width: screen.size.width, height: screen.menuBarHeight) else {
-            return nil
-        }
-
-        return combineImages(baseImage: resizedWallpaper, addedImage: topImage)
+        return .solid(color: color)
     }
 }
-

@@ -5,10 +5,9 @@
 //  Created by Igor Kulman on 19.11.2020.
 //
 
-import Accessibility
 import ArgumentParser
-import Foundation
 import Cocoa
+import Foundation
 
 final class Gradient: Command, ParsableCommand {
     static let configuration = CommandConfiguration(
@@ -32,11 +31,11 @@ final class Gradient: Command, ParsableCommand {
         return allDisplays
     }
 
-    override func createWallpaper(screen: NSScreen) -> NSImage? {
-        guard let wallpaper = loadWallpaperImage(wallpaper: wallpaper, screen: screen) else {
-            return nil
-        }
+    override var base: WallpaperPipeline.BaseSource {
+        return wallpaper.map { .file(path: $0) } ?? .currentDesktop
+    }
 
+    override func spec() -> WallpaperPipeline.StripSpec? {
         guard let startColor: NSColor = NSColor(hexString: self.startColor) else {
             Log.error("Invalid HEX color provided as gradient start color. Make sure it includes the '#' symbol, e.g: #FF0000")
             return nil
@@ -47,18 +46,6 @@ final class Gradient: Command, ParsableCommand {
             return nil
         }
 
-        guard let resizedWallpaper = wallpaper.crop(size: screen.size) else {
-            Log.error("Cannot not resize provided wallpaper to screen size")
-            return nil
-        }
-
-        Log.debug("Generating gradient image from \(colorName(startColor)) to \(colorName(endColor))")
-        guard let topImage = createGradientImage(startColor: startColor, endColor: endColor, width: screen.size.width, height: screen.menuBarHeight) else {
-            return nil
-        }
-
-        return combineImages(baseImage: resizedWallpaper, addedImage: topImage)
+        return .gradient(start: startColor, end: endColor)
     }
 }
-
-
