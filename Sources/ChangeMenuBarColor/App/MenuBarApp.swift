@@ -70,7 +70,9 @@ final class MenuBarAppDelegate: NSObject, NSApplicationDelegate {
 
     private func statusIcon() -> NSImage {
         if let url = Bundle.main.url(forResource: "AppIcon", withExtension: "png"), let icon = NSImage(contentsOf: url) {
-            icon.size = NSSize(width: 16, height: 16)
+            // The icon carries its own transparent margins, so go larger than the
+            // usual 16pt to keep the visible artwork at a normal status-icon size.
+            icon.size = NSSize(width: 20, height: 20)
             NSApp.applicationIconImage = icon
             return icon
         }
